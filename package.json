@@ -1,0 +1,19 @@
+{
+  "name": "intiri-template-replica",
+  "version": "1.0.0",
+  "description": "Replica of intiri-template.webflow.io",
+  "main": "index.js",
+  "scripts": {
+    "start": "node server.js",
+    "capture": "node capture-site.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "puppeteer": "^21.5.0",
+    "express": "^4.18.2"
+  }
+}
+
+

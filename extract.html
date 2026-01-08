@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webflow Site Extractor</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        .section h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+        .button {
+            background: #667eea;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            margin: 5px;
+            transition: all 0.3s;
+        }
+        .button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        .button:active {
+            transform: translateY(0);
+        }
+        .output {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 15px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .status {
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 15px;
+            display: none;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .instructions {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        .instructions ol {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+        .instructions li {
+            margin-bottom: 8px;
+            line-height: 1.6;
+        }
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 Webflow Site Extractor</h1>
+        <p class="subtitle">Extract and replicate intiri-template.webflow.io</p>
+
+        <div class="instructions">
+            <strong>📋 Instructions:</strong>
+            <ol>
+                <li>Open <code>https://intiri-template.webflow.io</code> in a new tab</li>
+                <li>Open Developer Tools (F12 or Right-click → Inspect)</li>
+                <li>Go to the Console tab</li>
+                <li>Copy and paste the script below into the console and press Enter</li>
+                <li>The script will extract all data and provide download links</li>
+            </ol>
+        </div>
+
+        <div class="section">
+            <h2>📝 Console Script</h2>
+            <p style="margin-bottom: 15px;">Copy this entire script and paste it into the browser console on the Webflow site:</p>
+            <div class="output" id="script-output"></div>
+            <button class="button" onclick="copyScript()">📋 Copy Script</button>
+        </div>
+
+        <div class="section">
+            <h2>🔧 Alternative: Manual Extraction Helper</h2>
+            <p style="margin-bottom: 15px;">If the console script doesn't work due to CORS, use these manual steps:</p>
+            <button class="button" onclick="showManualSteps()">Show Manual Steps</button>
+            <div id="manual-steps" style="display: none; margin-top: 15px;">
+                <ol style="margin-left: 20px; line-height: 2;">
+                    <li>Right-click on the page → <strong>Save Page As</strong> → Save as "index.html"</li>
+                    <li>In DevTools → <strong>Sources</strong> tab → Find all CSS files → Copy content</li>
+                    <li>In DevTools → <strong>Network</strong> tab → Filter by "Font" → Download all font files</li>
+                    <li>In DevTools → <strong>Network</strong> tab → Filter by "Img" → Download all images</li>
+                    <li>In DevTools → <strong>Styles</strong> panel → Search for "@keyframes" → Copy all animations</li>
+                    <li>Test responsiveness using DevTools device toolbar</li>
+                </ol>
+            </div>
+        </div>
+
+        <div id="status" class="status"></div>
+    </div>
+
+    <script>
+        const extractionScript = `
+(function() {
+    console.log('🚀 Starting Webflow Site Extraction...');
+    
+    const data = {
+        html: document.documentElement.outerHTML,
+        styles: [],
+        fonts: [],
+        animations: [],
+        mediaQueries: [],
+        images: [],
+        scripts: []
+    };
+    
+    // Extract all CSS
+    console.log('📝 Extracting CSS...');
+    const stylesheets = Array.from(document.styleSheets);
+    stylesheets.forEach((sheet, index) => {
+        try {
+            const rules = Array.from(sheet.cssRules || []);
+            rules.forEach(rule => {
+                if (rule.cssText) {
+                    data.styles.push(rule.cssText);
+                }
+                
+                // Extract keyframes
+                if (rule instanceof CSSKeyframesRule) {
+                    data.animations.push({
+                        name: rule.name,
+                        cssText: rule.cssText
+                    });
+                }
+                
+                // Extract media queries
+                if (rule instanceof CSSMediaRule) {
+                    data.mediaQueries.push({
+                        media: rule.media.mediaText,
+                        cssText: rule.cssText
+                    });
+                }
+                
+                // Extract font faces
+                if (rule instanceof CSSFontFaceRule) {
+                    data.fonts.push(rule.cssText);
+                }
+            });
+        } catch (e) {
+            console.warn('Could not access stylesheet ' + index + ':', e.message);
+        }
+    });
+    
+    // Extract images
+    console.log('🖼️ Extracting images...');
+    const images = Array.from(document.querySelectorAll('img'));
+    data.images = images.map(img => ({
+        src: img.src,
+        alt: img.alt,
+        className: img.className,
+        id: img.id,
+        width: img.width,
+        height: img.height
+    }));
+    
+    // Extract background images
+    const allElements = document.querySelectorAll('*');
+    allElements.forEach(el => {
+        const bgImage = window.getComputedStyle(el).backgroundImage;
+        if (bgImage && bgImage !== 'none' && bgImage.includes('url')) {
+            data.images.push({
+                type: 'background',
+                src: bgImage.match(/url\\(["']?([^"']+)["']?\\)/)?.[1],
+                element: el.tagName + (el.className ? '.' + el.className : '') + (el.id ? '#' + el.id : '')
+            });
+        }
+    });
+    
+    // Extract scripts
+    console.log('📜 Extracting scripts...');
+    const scripts = Array.from(document.querySelectorAll('script'));
+    data.scripts = scripts.map(script => ({
+        src: script.src,
+        type: script.type,
+        content: script.innerHTML.substring(0, 500) // First 500 chars
+    }));
+    
+    // Extract computed styles for key elements
+    console.log('🎨 Extracting computed styles...');
+    const keyElements = document.querySelectorAll('[class], [id]');
+    const computedStyles = {};
+    keyElements.forEach((el, index) => {
+        if (index < 100) { // Limit to first 100 to avoid too much data
+            const selector = el.id ? '#' + el.id : '.' + Array.from(el.classList).join('.');
+            const style = window.getComputedStyle(el);
+            computedStyles[selector] = {
+                display: style.display,
+                position: style.position,
+                width: style.width,
+                height: style.height,
+                margin: style.margin,
+                padding: style.padding,
+                backgroundColor: style.backgroundColor,
+                color: style.color,
+                fontSize: style.fontSize,
+                fontFamily: style.fontFamily,
+                fontWeight: style.fontWeight,
+                lineHeight: style.lineHeight,
+                transform: style.transform,
+                transition: style.transition,
+                animation: style.animation
+            };
+        }
+    });
+    data.computedStyles = computedStyles;
+    
+    // Create download function
+    function downloadFile(filename, content, mimeType) {
+        const blob = new Blob([content], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+    
+    // Download all files
+    console.log('💾 Preparing downloads...');
+    
+    // Download HTML
+    downloadFile('index.html', data.html, 'text/html');
+    console.log('✅ Downloaded index.html');
+    
+    // Download CSS
+    const cssContent = data.styles.join('\\n\\n');
+    downloadFile('styles.css', cssContent, 'text/css');
+    console.log('✅ Downloaded styles.css');
+    
+    // Download JSON data
+    const jsonContent = JSON.stringify(data, null, 2);
+    downloadFile('site-data.json', jsonContent, 'application/json');
+    console.log('✅ Downloaded site-data.json');
+    
+    // Download animations separately
+    const animationsContent = data.animations.map(a => a.cssText).join('\\n\\n');
+    downloadFile('animations.css', animationsContent, 'text/css');
+    console.log('✅ Downloaded animations.css');
+    
+    // Download media queries
+    const mediaQueriesContent = data.mediaQueries.map(mq => mq.cssText).join('\\n\\n');
+    downloadFile('media-queries.css', mediaQueriesContent, 'text/css');
+    console.log('✅ Downloaded media-queries.css');
+    
+    console.log('🎉 Extraction complete! All files downloaded.');
+    console.log('📊 Summary:', {
+        stylesheets: stylesheets.length,
+        images: data.images.length,
+        animations: data.animations.length,
+        mediaQueries: data.mediaQueries.length,
+        scripts: data.scripts.length
+    });
+    
+    return data;
+})();
+`;
+
+        document.getElementById('script-output').textContent = extractionScript;
+
+        function copyScript() {
+            const script = document.getElementById('script-output').textContent;
+            navigator.clipboard.writeText(script).then(() => {
+                showStatus('✅ Script copied to clipboard! Paste it in the browser console on the Webflow site.', 'success');
+            }).catch(() => {
+                // Fallback for older browsers
+                const textarea = document.createElement('textarea');
+                textarea.value = script;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                showStatus('✅ Script copied to clipboard!', 'success');
+            });
+        }
+
+        function showManualSteps() {
+            const steps = document.getElementById('manual-steps');
+            steps.style.display = steps.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = 'status ' + type;
+            statusDiv.style.display = 'block';
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
+
+

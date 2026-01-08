@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webflow Site Capture Tool</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        button {
+            background: #0066cc;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background: #0052a3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            display: none;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .output {
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .note {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            color: #856404;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌐 Webflow Site Capture Tool</h1>
+        
+        <div class="note">
+            <strong>Note:</strong> Due to CORS restrictions, you'll need to use a browser extension or run this from a local server. 
+            Alternatively, you can manually visit the site and use browser DevTools to extract the information.
+        </div>
+        
+        <div class="input-group">
+            <label for="url">Webflow Site URL:</label>
+            <input type="text" id="url" value="https://intiri-template.webflow.io" placeholder="Enter Webflow site URL">
+        </div>
+        
+        <button onclick="captureSite()">Capture Site Data</button>
+        <button onclick="downloadAll()">Download All Data</button>
+        
+        <div id="status" class="status"></div>
+        <div id="output" class="output" style="display: none;"></div>
+    </div>
+
+    <script>
+        let capturedData = {};
+
+        async function captureSite() {
+            const url = document.getElementById('url').value;
+            if (!url) {
+                showStatus('Please enter a URL', 'error');
+                return;
+            }
+
+            showStatus('Capturing site data... This may take a moment.', 'info');
+            
+            try {
+                // Note: Due to CORS, this will only work if the site allows it
+                // or if you use a browser extension
+                const response = await fetch(url);
+                const html = await response.text();
+                
+                // Create a temporary iframe to parse the HTML
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                
+                // Extract CSS
+                const stylesheets = Array.from(doc.styleSheets);
+                let cssText = '';
+                stylesheets.forEach(sheet => {
+                    try {
+                        const rules = Array.from(sheet.cssRules || []);
+                        rules.forEach(rule => {
+                            cssText += rule.cssText + '\n\n';
+                        });
+                    } catch (e) {
+                        console.log('Could not access stylesheet:', e);
+                    }
+                });
+                
+                capturedData = {
+                    html: html,
+                    css: cssText,
+                    timestamp: new Date().toISOString(),
+                    url: url
+                };
+                
+                showStatus('Data captured successfully! Click "Download All Data" to save.', 'success');
+                document.getElementById('output').style.display = 'block';
+                document.getElementById('output').textContent = JSON.stringify(capturedData, null, 2).substring(0, 1000) + '...';
+                
+            } catch (error) {
+                showStatus('Error: ' + error.message + '. Due to CORS restrictions, you may need to use browser DevTools manually.', 'error');
+                console.error(error);
+            }
+        }
+
+        function downloadAll() {
+            if (!capturedData.html) {
+                showStatus('Please capture the site first', 'error');
+                return;
+            }
+
+            // Download HTML
+            downloadFile('index.html', capturedData.html, 'text/html');
+            
+            // Download CSS
+            downloadFile('styles.css', capturedData.css, 'text/css');
+            
+            // Download JSON data
+            downloadFile('captured-data.json', JSON.stringify(capturedData, null, 2), 'application/json');
+            
+            showStatus('All files downloaded!', 'success');
+        }
+
+        function downloadFile(filename, content, mimeType) {
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = 'status ' + type;
+            statusDiv.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
+
+
